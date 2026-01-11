@@ -222,22 +222,27 @@ export default {
 					return jsonResponse({ error: 'Workout not found' }, 404);
 				}
 
-				// Get exercises for this workout with alternatives
+				// Get exercises for this workout with alternatives AND completion status
 				const exercises = await env.DB.prepare(
 					`SELECT e.*, wte.sets, wte.reps, wte.duration_seconds, wte.rest_seconds, wte.order_index,
-					        alt.id as alt_id, alt.name as alt_name,
-					        alt.equipment_required as alt_equipment_required,
-					        alt.description as alt_description
-					 FROM workout_template_exercises wte
-					 JOIN exercises e ON wte.exercise_id = e.id
-					 LEFT JOIN exercises alt ON e.alternative_exercise_id = alt.id
-					 WHERE wte.workout_template_id = ?
-					 ORDER BY wte.order_index`
-				).bind((workout as any).workout_template_id).all();
+				        alt.id as alt_id, alt.name as alt_name,
+				        alt.equipment_required as alt_equipment_required,
+				        alt.description as alt_description,
+				        ec.completed as exercise_completed,
+				        ec.completed_at as exercise_completed_at
+				 FROM workout_template_exercises wte
+				 JOIN exercises e ON wte.exercise_id = e.id
+				 LEFT JOIN exercises alt ON e.alternative_exercise_id = alt.id
+				 LEFT JOIN exercise_completions ec ON ec.scheduled_workout_id = ? AND ec.exercise_id = e.id
+				 WHERE wte.workout_template_id = ?
+				 ORDER BY wte.order_index`
+				).bind(workoutId, (workout as any).workout_template_id).all();
 
-				// Format exercises with alternatives
+				// Format exercises with alternatives and completion status
 				const formattedExercises = exercises.results.map((ex: any) => ({
 					...ex,
+					completed: ex.exercise_completed === 1,
+					completed_at: ex.exercise_completed_at,
 					alternative: ex.alt_id ? {
 						id: ex.alt_id,
 						name: ex.alt_name,
@@ -247,7 +252,9 @@ export default {
 					alt_id: undefined,
 					alt_name: undefined,
 					alt_equipment_required: undefined,
-					alt_description: undefined
+					alt_description: undefined,
+					exercise_completed: undefined,
+					exercise_completed_at: undefined
 				}));
 
 				return jsonResponse({
@@ -270,14 +277,23 @@ export default {
 				return jsonResponse({ success: true });
 			}
 
-			// Mark exercise in workout as complete
+			// Mark exercise in workout as complete/uncomplete (toggle support)
 			if (path.startsWith('/api/workouts/') && path.includes('/exercises/') && method === 'POST') {
 				const pathParts = path.split('/');
 				const workoutId = parseInt(pathParts[3]);
 				const exerciseId = parseInt(pathParts[5]);
 				const body = await parseJSON(request);
 
-				// Check if completion record exists
+				// If completed is explicitly false, delete the completion record (uncomplete)
+				if (body && body.completed === false) {
+					await env.DB.prepare(
+						`DELETE FROM exercise_completions
+						 WHERE scheduled_workout_id = ? AND exercise_id = ?`
+					).bind(workoutId, exerciseId).run();
+					return jsonResponse({ success: true, completed: false });
+				}
+
+				// Otherwise, mark as complete (create or update)
 				const existing = await env.DB.prepare(
 					`SELECT id FROM exercise_completions
 					 WHERE scheduled_workout_id = ? AND exercise_id = ?`
@@ -292,11 +308,11 @@ export default {
 						     notes = ?
 						 WHERE id = ?`
 					).bind(
-						body.sets || 0,
-						body.reps || 0,
-						body.weight || null,
-						body.duration || null,
-						body.notes || null,
+						body?.sets || 0,
+						body?.reps || 0,
+						body?.weight || null,
+						body?.duration || null,
+						body?.notes || null,
 						(existing as any).id
 					).run();
 				} else {
@@ -309,15 +325,15 @@ export default {
 					).bind(
 						workoutId,
 						exerciseId,
-						body.sets || 0,
-						body.reps || 0,
-						body.weight || null,
-						body.duration || null,
-						body.notes || null
+						body?.sets || 0,
+						body?.reps || 0,
+						body?.weight || null,
+						body?.duration || null,
+						body?.notes || null
 					).run();
 				}
 
-				return jsonResponse({ success: true });
+				return jsonResponse({ success: true, completed: true });
 			}
 
 			// Get user preferences
