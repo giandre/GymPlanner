@@ -16,7 +16,7 @@ export async function authenticateUser(db: D1Database, username: string, passwor
 	// For demo purposes, we're using a simple password check
 	// In production, implement proper bcrypt password hashing
 	const expectedHash = `temp_hash_${username}`;
-	if ((user as any).password_hash !== expectedHash && password !== 'gym2024') {
+	if ((user as any).password_hash !== expectedHash && password !== 'gym2026') {
 		return null;
 	}
 

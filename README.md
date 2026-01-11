@@ -57,34 +57,30 @@ wrangler d1 execute gym-planner-db --remote --file=./schema.sql
 wrangler d1 execute gym-planner-db --remote --file=./seed.sql
 ```
 
-## GitHub Actions Setup
+## Cloudflare Pages Deployment
 
-To enable automatic deployment to Cloudflare when pushing to GitHub:
+This project deploys to Cloudflare Pages (not Workers) for the best full-stack experience.
 
-### 1. Create Cloudflare API Token
+### Setup via Cloudflare Dashboard
 
-1. Go to https://dash.cloudflare.com/profile/api-tokens
-2. Click "Create Token"
-3. Use the "Edit Cloudflare Workers" template
-4. Click "Continue to summary" then "Create Token"
-5. Copy the token (you'll only see it once!)
+1. Go to https://dash.cloudflare.com/
+2. Navigate to **Workers & Pages**
+3. Click **Create application** → **Pages** → **Connect to Git**
+4. Connect your GitHub account and select the `GymPlanner` repository
+5. Configure build settings:
+   - **Production branch**: `main`
+   - **Framework preset**: None
+   - **Build command**: (leave empty)
+   - **Build output directory**: `public`
+6. Click **Save and Deploy**
 
-### 2. Add GitHub Secrets
+That's it! Cloudflare will automatically deploy on every push to main.
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions
-
-Add these secrets:
-
-- **CLOUDFLARE_API_TOKEN**: The token you just created
-- **CLOUDFLARE_ACCOUNT_ID**: `71022598bc00bdb7d0f4e79d5a2af0ea`
-
-### 3. Push to GitHub
+### Manual Deployment (Alternative)
 
 ```bash
-git push origin main
+npm run deploy
 ```
-
-The GitHub Action will automatically deploy to Cloudflare!
 
 ## API Endpoints
 
@@ -146,7 +142,14 @@ The GitHub Action will automatically deploy to Cloudflare!
 
 ## Default Login Credentials
 
-For development/testing, use password: `gym2024` with any username (gio, jeannine, gia, or nati)
+For development/testing, use password: `gym2026` with any username (gio, jeannine, gia, or nati)
+
+## Exercise Alternatives
+
+Every exercise now includes an alternative option! This means:
+- **Equipment exercises** have no-equipment alternatives (e.g., Dumbbell Press → Push-Ups)
+- **No-equipment exercises** have equipment upgrades (e.g., Bodyweight Squats → Goblet Squats)
+- If you arrive at the gym and equipment isn't available, you can switch to the alternative workout on the fly
 
 ## Deployment
 

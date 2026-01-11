@@ -88,37 +88,73 @@ export default {
 				const equipmentParam = url.searchParams.get('equipment');
 				const difficultyParam = url.searchParams.get('difficulty');
 
-				let query = 'SELECT * FROM exercises WHERE 1=1';
+				let query = `
+					SELECT e.*, alt.id as alt_id, alt.name as alt_name,
+					       alt.equipment_required as alt_equipment_required
+					FROM exercises e
+					LEFT JOIN exercises alt ON e.alternative_exercise_id = alt.id
+					WHERE 1=1
+				`;
 				const params: any[] = [];
 
 				if (equipmentParam !== null) {
-					query += ' AND equipment_required = ?';
+					query += ' AND e.equipment_required = ?';
 					params.push(equipmentParam === 'true' ? 1 : 0);
 				}
 
 				if (difficultyParam) {
-					query += ' AND difficulty = ?';
+					query += ' AND e.difficulty = ?';
 					params.push(difficultyParam);
 				}
 
 				const stmt = env.DB.prepare(query);
 				const result = await stmt.bind(...params).all();
 
-				return jsonResponse({ exercises: result.results });
+				// Format the results to include alternative as nested object
+				const exercises = result.results.map((ex: any) => ({
+					...ex,
+					alternative: ex.alt_id ? {
+						id: ex.alt_id,
+						name: ex.alt_name,
+						equipment_required: ex.alt_equipment_required
+					} : null,
+					// Remove the flat alt_ fields
+					alt_id: undefined,
+					alt_name: undefined,
+					alt_equipment_required: undefined
+				}));
+
+				return jsonResponse({ exercises });
 			}
 
 			// Get specific exercise
 			if (path.startsWith('/api/exercises/') && method === 'GET') {
 				const exerciseId = parseInt(path.split('/')[3]);
 				const exercise = await env.DB.prepare(
-					'SELECT * FROM exercises WHERE id = ?'
+					`SELECT e.*, alt.id as alt_id, alt.name as alt_name,
+					        alt.equipment_required as alt_equipment_required,
+					        alt.description as alt_description
+					 FROM exercises e
+					 LEFT JOIN exercises alt ON e.alternative_exercise_id = alt.id
+					 WHERE e.id = ?`
 				).bind(exerciseId).first();
 
 				if (!exercise) {
 					return jsonResponse({ error: 'Exercise not found' }, 404);
 				}
 
-				return jsonResponse({ exercise });
+				// Format with alternative
+				const formattedExercise = {
+					...exercise,
+					alternative: (exercise as any).alt_id ? {
+						id: (exercise as any).alt_id,
+						name: (exercise as any).alt_name,
+						equipment_required: (exercise as any).alt_equipment_required,
+						description: (exercise as any).alt_description
+					} : null
+				};
+
+				return jsonResponse({ exercise: formattedExercise });
 			}
 
 			// Generate workout plan for user
@@ -186,18 +222,37 @@ export default {
 					return jsonResponse({ error: 'Workout not found' }, 404);
 				}
 
-				// Get exercises for this workout
+				// Get exercises for this workout with alternatives
 				const exercises = await env.DB.prepare(
-					`SELECT e.*, wte.sets, wte.reps, wte.duration_seconds, wte.rest_seconds, wte.order_index
+					`SELECT e.*, wte.sets, wte.reps, wte.duration_seconds, wte.rest_seconds, wte.order_index,
+					        alt.id as alt_id, alt.name as alt_name,
+					        alt.equipment_required as alt_equipment_required,
+					        alt.description as alt_description
 					 FROM workout_template_exercises wte
 					 JOIN exercises e ON wte.exercise_id = e.id
+					 LEFT JOIN exercises alt ON e.alternative_exercise_id = alt.id
 					 WHERE wte.workout_template_id = ?
 					 ORDER BY wte.order_index`
 				).bind((workout as any).workout_template_id).all();
 
+				// Format exercises with alternatives
+				const formattedExercises = exercises.results.map((ex: any) => ({
+					...ex,
+					alternative: ex.alt_id ? {
+						id: ex.alt_id,
+						name: ex.alt_name,
+						equipment_required: ex.alt_equipment_required,
+						description: ex.alt_description
+					} : null,
+					alt_id: undefined,
+					alt_name: undefined,
+					alt_equipment_required: undefined,
+					alt_description: undefined
+				}));
+
 				return jsonResponse({
 					workout,
-					exercises: exercises.results
+					exercises: formattedExercises
 				});
 			}
 
