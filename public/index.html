@@ -232,10 +232,10 @@
             useEffect(() => {
                 if (!imageUrl || imageError || !hasSecondFrame) return;
 
-                // Animate between frame 0 and 1 every 600ms (faster for more noticeable animation)
+                // Animate between frame 0 and 1 every 1000ms (1 second per frame)
                 const interval = setInterval(() => {
                     setCurrentFrame(frame => frame === 0 ? 1 : 0);
-                }, 600);
+                }, 1000);
 
                 return () => clearInterval(interval);
             }, [imageUrl, imageError, hasSecondFrame]);
@@ -264,7 +264,7 @@
                             key={animatedImageUrl}
                             src={animatedImageUrl}
                             alt={name}
-                            className="w-full object-cover max-h-64 opacity-90 hover:opacity-100 transition-opacity"
+                            className="w-full object-cover max-h-96 opacity-90 hover:opacity-100 transition-opacity"
                             onError={handleImageError}
                         />
                         {/* Debug indicator - remove later */}
