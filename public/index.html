@@ -113,7 +113,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback } = React;
+        const { useState, useEffect, useCallback, useRef } = React;
 
         // API Helper
         const api = {
@@ -222,6 +222,54 @@
                 </svg>
             )
         };
+
+        // Animated Exercise Image Component
+        function AnimatedExerciseImage({ imageUrl, name, videoUrl }) {
+            const [currentFrame, setCurrentFrame] = useState(0);
+            const [imageError, setImageError] = useState(false);
+
+            useEffect(() => {
+                if (!imageUrl || imageError) return;
+
+                // Animate between frame 0 and 1 every 800ms
+                const interval = setInterval(() => {
+                    setCurrentFrame(frame => frame === 0 ? 1 : 0);
+                }, 800);
+
+                return () => clearInterval(interval);
+            }, [imageUrl, imageError]);
+
+            if (imageError || !imageUrl) {
+                return null;
+            }
+
+            // Replace /0.jpg with /0.jpg or /1.jpg based on current frame
+            const animatedImageUrl = imageUrl.replace(/\/\d\.jpg$/, `/${currentFrame}.jpg`);
+
+            return (
+                <div className="mt-4 space-y-2">
+                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/20">
+                        <img
+                            src={animatedImageUrl}
+                            alt={name}
+                            className="w-full object-cover max-h-64 opacity-90 hover:opacity-100 transition-opacity"
+                            onError={() => setImageError(true)}
+                        />
+                    </div>
+                    {videoUrl && (
+                        <a
+                            href={videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors group"
+                        >
+                            <Icons.Play />
+                            <span className="font-medium">Watch Video Tutorial</span>
+                        </a>
+                    )}
+                </div>
+            );
+        }
 
         // Login Page
         function LoginPage({ onLogin }) {
@@ -672,35 +720,13 @@
                                                 <h3 className={`font-semibold text-lg transition-colors ${isComplete ? 'text-emerald-400' : 'text-white'}`}>{displayExercise.name}</h3>
                                                 <p className="text-gray-400 text-sm mt-1">{displayExercise.description}</p>
 
-                                                {/* Media Section */}
-                                                {(displayExercise.video_url || displayExercise.image_url) && (
-                                                    <div className="mt-4 mb-2 rounded-xl overflow-hidden border border-white/10 bg-black/20">
-                                                        {displayExercise.video_url ? (
-                                                            <div className="aspect-video relative group">
-                                                                <img
-                                                                    src={displayExercise.image_url || `https://img.youtube.com/vi/${displayExercise.video_url.split('v=')[1]}/hqdefault.jpg`}
-                                                                    alt={displayExercise.name}
-                                                                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                                                                />
-                                                                <a
-                                                                    href={displayExercise.video_url}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors"
-                                                                >
-                                                                    <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg transform group-hover:scale-110 transition-transform">
-                                                                        <Icons.Play />
-                                                                    </div>
-                                                                </a>
-                                                            </div>
-                                                        ) : displayExercise.image_url && (
-                                                            <img
-                                                                src={displayExercise.image_url}
-                                                                alt={displayExercise.name}
-                                                                className="w-full object-cover max-h-64"
-                                                            />
-                                                        )}
-                                                    </div>
+                                                {/* Animated Exercise Image */}
+                                                {displayExercise.image_url && (
+                                                    <AnimatedExerciseImage
+                                                        imageUrl={displayExercise.image_url}
+                                                        name={displayExercise.name}
+                                                        videoUrl={displayExercise.video_url}
+                                                    />
                                                 )}
 
                                                 <div className="flex flex-wrap gap-3 mt-3">
@@ -861,16 +887,13 @@
                                                     <h3 className="font-semibold">{exercise.name}</h3>
                                                     <p className="text-gray-400 text-sm mt-1 line-clamp-2">{exercise.description}</p>
 
-                                                    {/* Image Preview */}
+                                                    {/* Animated Image Preview */}
                                                     {exercise.image_url && (
-                                                        <div className="mt-3 rounded-xl overflow-hidden aspect-video bg-black/20">
-                                                            <img
-                                                                src={exercise.image_url}
-                                                                alt={exercise.name}
-                                                                className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
-                                                                onError={(e) => e.target.style.display = 'none'}
-                                                            />
-                                                        </div>
+                                                        <AnimatedExerciseImage
+                                                            imageUrl={exercise.image_url}
+                                                            name={exercise.name}
+                                                            videoUrl={exercise.video_url}
+                                                        />
                                                     )}
 
                                                     <div className="flex flex-wrap gap-2 mt-3">
