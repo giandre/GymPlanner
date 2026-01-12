@@ -14,6 +14,7 @@
 		// The path to the directory containing the `index.html` file to be served at `/`
 		"directory": "./public"
 	},
+	"workers_dev": true,
 	"observability": {
 		"enabled": true
 	},

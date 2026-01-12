@@ -735,8 +735,8 @@
                                         <button
                                             onClick={() => toggleComplete(exercise)}
                                             className={`p-3 rounded-xl transition-all ${isComplete
-                                                    ? 'bg-emerald-500 text-white hover:bg-red-500 hover:text-white'
-                                                    : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                                                ? 'bg-emerald-500 text-white hover:bg-red-500 hover:text-white'
+                                                : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                                                 }`}
                                             title={isComplete ? "Mark incomplete" : "Mark complete"}
                                         >
@@ -860,6 +860,18 @@
                                                 <div key={exercise.id} className="glass rounded-2xl p-5 hover:bg-white/10 transition-colors">
                                                     <h3 className="font-semibold">{exercise.name}</h3>
                                                     <p className="text-gray-400 text-sm mt-1 line-clamp-2">{exercise.description}</p>
+
+                                                    {/* Image Preview */}
+                                                    {exercise.image_url && (
+                                                        <div className="mt-3 rounded-xl overflow-hidden aspect-video bg-black/20">
+                                                            <img
+                                                                src={exercise.image_url}
+                                                                alt={exercise.name}
+                                                                className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
+                                                                onError={(e) => e.target.style.display = 'none'}
+                                                            />
+                                                        </div>
+                                                    )}
 
                                                     <div className="flex flex-wrap gap-2 mt-3">
                                                         <span className={`px-2 py-1 rounded text-xs ${exercise.difficulty === 'beginner' ? 'bg-blue-500/20 text-blue-400' :
