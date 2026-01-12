@@ -199,7 +199,7 @@ export default {
 					params.push(date);
 				}
 
-				query += ' ORDER BY sw.scheduled_date DESC';
+				query += ' ORDER BY sw.scheduled_date ASC';
 
 				const stmt = env.DB.prepare(query);
 				const result = await stmt.bind(...params).all();
