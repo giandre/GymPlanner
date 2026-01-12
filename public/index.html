@@ -227,17 +227,18 @@
         function AnimatedExerciseImage({ imageUrl, name, videoUrl }) {
             const [currentFrame, setCurrentFrame] = useState(0);
             const [imageError, setImageError] = useState(false);
+            const [hasSecondFrame, setHasSecondFrame] = useState(true);
 
             useEffect(() => {
-                if (!imageUrl || imageError) return;
+                if (!imageUrl || imageError || !hasSecondFrame) return;
 
-                // Animate between frame 0 and 1 every 800ms
+                // Animate between frame 0 and 1 every 600ms (faster for more noticeable animation)
                 const interval = setInterval(() => {
                     setCurrentFrame(frame => frame === 0 ? 1 : 0);
-                }, 800);
+                }, 600);
 
                 return () => clearInterval(interval);
-            }, [imageUrl, imageError]);
+            }, [imageUrl, imageError, hasSecondFrame]);
 
             if (imageError || !imageUrl) {
                 return null;
@@ -246,15 +247,32 @@
             // Replace /0.jpg with /0.jpg or /1.jpg based on current frame
             const animatedImageUrl = imageUrl.replace(/\/\d\.jpg$/, `/${currentFrame}.jpg`);
 
+            const handleImageError = () => {
+                if (currentFrame === 1) {
+                    // Frame 1 doesn't exist, stop animation
+                    setHasSecondFrame(false);
+                    setCurrentFrame(0);
+                } else {
+                    setImageError(true);
+                }
+            };
+
             return (
                 <div className="mt-4 space-y-2">
-                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/20">
+                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/20 relative">
                         <img
+                            key={animatedImageUrl}
                             src={animatedImageUrl}
                             alt={name}
                             className="w-full object-cover max-h-64 opacity-90 hover:opacity-100 transition-opacity"
-                            onError={() => setImageError(true)}
+                            onError={handleImageError}
                         />
+                        {/* Debug indicator - remove later */}
+                        {hasSecondFrame && (
+                            <div className="absolute top-2 right-2 bg-emerald-500 text-white text-xs px-2 py-1 rounded">
+                                Frame {currentFrame}
+                            </div>
+                        )}
                     </div>
                     {videoUrl && (
                         <a
