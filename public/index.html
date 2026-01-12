@@ -509,14 +509,7 @@
                             ) : (
                                 <div className="text-center py-8">
                                     <p className="text-gray-400 mb-4">No workout scheduled for today</p>
-                                    <button
-                                        onClick={handleGenerate}
-                                        disabled={generating}
-                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition-colors disabled:opacity-50"
-                                    >
-                                        <Icons.Refresh />
-                                        {generating ? 'Generating...' : 'Generate Week Plan'}
-                                    </button>
+                                    {/* Hidden: Generate button removed per user request */}
                                 </div>
                             )}
                         </div>
@@ -525,19 +518,7 @@
                         <div className="glass rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                             <h3 className="text-lg font-semibold mb-6">Quick Actions</h3>
                             <div className="space-y-3">
-                                <button
-                                    onClick={handleGenerate}
-                                    disabled={generating}
-                                    className="w-full p-4 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-left hover:from-emerald-500/30 hover:to-teal-500/30 transition-all flex items-center justify-between disabled:opacity-50"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-emerald-500/20">
-                                            <Icons.Refresh />
-                                        </div>
-                                        <span>Generate New Week</span>
-                                    </div>
-                                    <Icons.ChevronRight />
-                                </button>
+                                {/* Hidden: Generate New Week button removed per user request */}
                                 <button
                                     onClick={onViewExercises}
                                     className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-left hover:bg-white/10 transition-all flex items-center justify-between"
