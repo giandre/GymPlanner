@@ -8,6 +8,7 @@ import { authenticateUser, hashPassword } from './services/auth';
 
 interface Env {
 	DB: D1Database;
+	ASSETS: Fetcher;
 }
 
 // Helper function to create JSON responses
@@ -350,10 +351,8 @@ export default {
 				return jsonResponse({ preferences: prefs });
 			}
 
-			// Serve the frontend for all other routes
-			return new Response('Gym Planner API - Frontend coming soon', {
-				headers: { 'Content-Type': 'text/html' },
-			});
+			// Serve static assets for all other routes
+			return env.ASSETS.fetch(request);
 
 		} catch (error) {
 			console.error('API Error:', error);
